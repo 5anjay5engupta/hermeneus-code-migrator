@@ -1,0 +1,157 @@
+{
+  "name": "Customer_ETL_Pipeline",
+  "properties": {
+    "activities": [
+      {
+        "name": "Customer_Data_Flow",
+        "type": "DataFlow",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "7.00:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "dataflow": {
+            "referenceName": "CustomerDataFlow",
+            "type": "DataFlowReference"
+          },
+          "staging": {
+            "linkedService": {
+              "referenceName": "AzureBlobStorageLinkedService",
+              "type": "LinkedServiceReference"
+            },
+            "folderPath": "staging/",
+            "fileName": "staging_file",
+            "format": {
+              "type": "DelimitedText",
+              "columnDelimiter": ",",
+              "rowDelimiter": "\n",
+              "escapeChar": "\\",
+              "quoteChar": "\"",
+              "firstRowAsHeader": true
+            }
+          }
+        }
+      }
+    ]
+  }
+}
+
+{
+  "name": "CustomerDataFlow",
+  "properties": {
+    "type": "MappingDataFlow",
+    "typeProperties": {
+      "sources": [
+        {
+          "name": "CustomerSource",
+          "dataset": {
+            "referenceName": "CustomerSourceDataset",
+            "type": "DatasetReference"
+          },
+          "sourceType": "AzureSqlSource",
+          "sourceOutputColumns": [
+            {
+              "name": "customer_id",
+              "type": "String"
+            },
+            {
+              "name": "first_name",
+              "type": "String"
+            },
+            {
+              "name": "last_name",
+              "type": "String"
+            },
+            {
+              "name": "email",
+              "type": "String"
+            }
+          ]
+        }
+      ],
+      "sinks": [
+        {
+          "name": "CustomerSink",
+          "dataset": {
+            "referenceName": "CustomerDwDataset",
+            "type": "DatasetReference"
+          },
+          "sinkType": "AzureSqlSink"
+        }
+      ],
+      "transformations": [
+        {
+          "name": "DerivedColumnTransformation",
+          "type": "DerivedColumn",
+          "derivedColumns": [
+            {
+              "name": "full_name",
+              "expression": "concat(first_name, ' ', last_name)"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+
+{
+  "name": "CustomerSourceDataset",
+  "properties": {
+    "linkedServiceName": {
+      "referenceName": "AzureSqlDatabaseLinkedService",
+      "type": "LinkedServiceReference"
+    },
+    "type": "AzureSqlTable",
+    "typeProperties": {
+      "tableName": "customer_source"
+    }
+  }
+}
+
+{
+  "name": "CustomerDwDataset",
+  "properties": {
+    "linkedServiceName": {
+      "referenceName": "AzureSqlDatabaseLinkedService",
+      "type": "LinkedServiceReference"
+    },
+    "type": "AzureSqlTable",
+    "typeProperties": {
+      "tableName": "customer_dw"
+    }
+  }
+}
+
+{
+  "name": "AzureSqlDatabaseLinkedService",
+  "properties": {
+    "type": "AzureSqlDatabase",
+    "typeProperties": {
+      "connectionString": "Server=tcp:<your_server>.database.windows.net,1433;Initial Catalog=<your_database>;Persist Security Info=False;User ID=<your_user>;Password=<your_password>;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+    }
+  }
+}
+
+{
+  "name": "AzureBlobStorageLinkedService",
+  "properties": {
+    "type": "AzureBlobStorage",
+    "typeProperties": {
+      "connectionString": "DefaultEndpointsProtocol=https;AccountName=<your_account_name>;AccountKey=<your_account_key>;EndpointSuffix=core.windows.net"
+    }
+  }
+}
+```
+
+**Comments:**
+- The SSIS package's OLE DB Source and Destination have been mapped to Azure SQL Datasets.
+- The Derived Column transformation is implemented using Azure Data Factory's Derived Column transformation in a Mapping Data Flow.
+- Linked services for Azure SQL Database and Azure Blob Storage are assumed to be required for staging and connection purposes.
+- Error handling and logging should be configured in Azure Data Factory's monitoring and alerting features.
+- Assumptions include that the Azure SQL Database and Blob Storage are properly configured and accessible.
