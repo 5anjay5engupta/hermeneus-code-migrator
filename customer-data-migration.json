@@ -3,7 +3,7 @@
   "properties": {
     "activities": [
       {
-        "name": "Customer_Data_Flow",
+        "name": "DataFlowActivity",
         "type": "DataFlow",
         "dependsOn": [],
         "policy": {
@@ -15,7 +15,7 @@
         },
         "userProperties": [],
         "typeProperties": {
-          "dataflow": {
+          "dataFlow": {
             "referenceName": "CustomerDataFlow",
             "type": "DataFlowReference"
           },
@@ -23,21 +23,12 @@
             "linkedService": {
               "referenceName": "AzureBlobStorageLinkedService",
               "type": "LinkedServiceReference"
-            },
-            "folderPath": "staging/",
-            "fileName": "staging_file",
-            "format": {
-              "type": "DelimitedText",
-              "columnDelimiter": ",",
-              "rowDelimiter": "\n",
-              "escapeChar": "\\",
-              "quoteChar": "\"",
-              "firstRowAsHeader": true
             }
           }
         }
       }
-    ]
+    ],
+    "annotations": []
   }
 }
 
@@ -53,47 +44,65 @@
             "referenceName": "CustomerSourceDataset",
             "type": "DatasetReference"
           },
-          "sourceType": "AzureSqlSource",
-          "sourceOutputColumns": [
-            {
-              "name": "customer_id",
-              "type": "String"
-            },
-            {
-              "name": "first_name",
-              "type": "String"
-            },
-            {
-              "name": "last_name",
-              "type": "String"
-            },
-            {
-              "name": "email",
-              "type": "String"
-            }
-          ]
+          "sourceTransformation": {
+            "type": "Source",
+            "sourceOutputColumns": [
+              {
+                "name": "customer_id",
+                "type": "String"
+              },
+              {
+                "name": "first_name",
+                "type": "String"
+              },
+              {
+                "name": "last_name",
+                "type": "String"
+              },
+              {
+                "name": "email",
+                "type": "String"
+              }
+            ]
+          }
         }
       ],
       "sinks": [
         {
           "name": "CustomerSink",
           "dataset": {
-            "referenceName": "CustomerDwDataset",
+            "referenceName": "CustomerDWDataset",
             "type": "DatasetReference"
           },
-          "sinkType": "AzureSqlSink"
+          "sinkTransformation": {
+            "type": "Sink",
+            "sinkOutputColumns": [
+              {
+                "name": "customer_id",
+                "type": "String"
+              },
+              {
+                "name": "full_name",
+                "type": "String"
+              },
+              {
+                "name": "email",
+                "type": "String"
+              }
+            ]
+          }
         }
       ],
       "transformations": [
         {
-          "name": "DerivedColumnTransformation",
+          "name": "DerivedColumn",
           "type": "DerivedColumn",
-          "derivedColumns": [
-            {
-              "name": "full_name",
-              "expression": "concat(first_name, ' ', last_name)"
+          "transformation": {
+            "type": "DerivedColumn",
+            "expressions": {
+              "full_name": "first_name + ' ' + last_name"
             }
-          ]
+          }
         }
       ]
     }
@@ -115,7 +124,7 @@
 }
 
 {
-  "name": "CustomerDwDataset",
+  "name": "CustomerDWDataset",
   "properties": {
     "linkedServiceName": {
       "referenceName": "AzureSqlDatabaseLinkedService",
@@ -133,7 +142,7 @@
   "properties": {
     "type": "AzureSqlDatabase",
     "typeProperties": {
-      "connectionString": "Server=tcp:<your_server>.database.windows.net,1433;Initial Catalog=<your_database>;Persist Security Info=False;User ID=<your_user>;Password=<your_password>;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+      "connectionString": "your_connection_string_here"
     }
   }
 }
@@ -143,15 +152,16 @@
   "properties": {
     "type": "AzureBlobStorage",
     "typeProperties": {
-      "connectionString": "DefaultEndpointsProtocol=https;AccountName=<your_account_name>;AccountKey=<your_account_key>;EndpointSuffix=core.windows.net"
+      "connectionString": "your_blob_storage_connection_string_here"
     }
   }
 }
 ```
 
-**Comments:**
-- The SSIS package's OLE DB Source and Destination have been mapped to Azure SQL Datasets.
-- The Derived Column transformation is implemented using Azure Data Factory's Derived Column transformation in a Mapping Data Flow.
-- Linked services for Azure SQL Database and Azure Blob Storage are assumed to be required for staging and connection purposes.
-- Error handling and logging should be configured in Azure Data Factory's monitoring and alerting features.
-- Assumptions include that the Azure SQL Database and Blob Storage are properly configured and accessible.
+**Comments and Assumptions:**
+1. The data flow activity in ADF replaces the SSIS Data Flow Task.
+2. The OLE DB Source and Destination are replaced with Azure SQL Database datasets.
+3. Derived Column transformation is implemented using ADF's Derived Column transformation.
+4. Error handling and logging are assumed to be managed by Azure Data Factory's built-in monitoring and logging capabilities.
+5. Connection strings need to be securely stored in Azure Key Vault or similar service.
+6. Assumed Azure SQL Database as the target for both source and destination datasets.
