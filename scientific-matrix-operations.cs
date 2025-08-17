@@ -14,8 +14,8 @@ class MatrixOperations
         {
             for (int j = 0; j < n; j++)
             {
-                matrixA[i, j] = (float)(i + 1 + j + 1); // Adjust for zero-based index
-                matrixB[i, j] = (float)((i + 1) * (j + 1)); // Adjust for zero-based index
+                matrixA[i, j] = (float)(i + 1 + j + 1); // Adjusting for zero-based index
+                matrixB[i, j] = (float)((i + 1) * (j + 1)); // Adjusting for zero-based index
             }
         }
 
@@ -33,7 +33,7 @@ class MatrixOperations
         }
 
         Console.WriteLine("Matrix multiplication completed");
-        Console.WriteLine("Result(1,1) = " + result[0, 0]); // Adjust for zero-based index
+        Console.WriteLine("Result(1,1) = " + result[0, 0]); // Adjusting for zero-based index
     }
 }
 ```
