@@ -1,21 +1,40 @@
-To translate the given C# code into T-SQL, we need to create a stored procedure that simulates the behavior of the C# program. The original C# code simulates a SQL query that returns no results by using a method that returns an empty collection. In T-SQL, we can achieve this by creating a stored procedure that executes a query with a condition that is always false, such as `1 = 2`.
+To translate the given C# code into PL/SQL, we need to simulate the behavior of a SQL query that returns no results. In PL/SQL, this can be achieved by creating a procedure that uses a cursor with a condition that always evaluates to false, ensuring no rows are fetched. Here's how you can implement this in PL/SQL:
 
-Here is the equivalent T-SQL code:
+```plsql
+DECLARE
+    -- Define a cursor that simulates the SQL query: SELECT * FROM tbl WHERE 1 = 2
+    CURSOR empty_cursor IS
+        SELECT * FROM tbl WHERE 1 = 2;
 
-```sql
--- Create a stored procedure to simulate the SQL query: SELECT * FROM tbl WHERE 1 = 2
-CREATE PROCEDURE GetEmptyResults
-AS
+    -- Variable to hold fetched row data
+    v_row tbl%ROWTYPE;
 BEGIN
-    -- This query will always return no results because the condition is always false
-    SELECT * FROM tbl WHERE 1 = 2;
-END
-GO
+    -- Open the cursor
+    OPEN empty_cursor;
 
--- Execute the stored procedure to demonstrate its behavior
-EXEC GetEmptyResults;
+    -- Fetch from the cursor
+    FETCH empty_cursor INTO v_row;
+
+    -- Check if any row was fetched
+    IF empty_cursor%NOTFOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Query Results: No rows returned.');
+    ELSE
+        -- This block will not execute because the condition 1 = 2 is always false
+        LOOP
+            DBMS_OUTPUT.PUT_LINE('Row data: ' || v_row.column_name); -- Replace 'column_name' with actual column names
+            FETCH empty_cursor INTO v_row;
+            EXIT WHEN empty_cursor%NOTFOUND;
+        END LOOP;
+    END IF;
+
+    -- Close the cursor
+    CLOSE empty_cursor;
+END;
+/
 ```
 
 ### Explanation:
-- **Stored Procedure `GetEmptyResults`**: This stored procedure contains a `SELECT` statement with a condition `1 = 2`, which is always false, ensuring that no rows are returned.
-- **Execution of the Stored Procedure**: The `EXEC GetEmptyResults;` statement demonstrates how to call the stored procedure, which will result in no output since the query returns no results.
+- **Cursor Declaration**: The `empty_cursor` is defined to select from `tbl` where `1 = 2`, which will always return no rows.
+- **Row Fetching**: The `FETCH` statement attempts to retrieve a row from the cursor. Since the condition is always false, no rows will be fetched.
+- **Output**: The `DBMS_OUTPUT.PUT_LINE` is used to print a message indicating that no rows were returned.
+- **Loop**: The loop is included to demonstrate how rows would be processed if any were fetched, but it will not execute in this case.
